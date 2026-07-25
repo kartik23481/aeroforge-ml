@@ -18,7 +18,7 @@ EXPECTED = [
     "latest_column_transformer.joblib",
     "xgb_flight_price_model.joblib"
 ]
-
+ 
 # Logging
 from mlops_src.utils.logger import get_logger
 

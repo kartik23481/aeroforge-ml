@@ -17,7 +17,7 @@ from utils.feature_utils import (
     ToDataFrame,
 )
 
-
+ 
 from utils.rbf import RouteCreator
 
 from sklearn.pipeline import Pipeline, FeatureUnion
@@ -58,6 +58,8 @@ def build_pipeline():
         ("onehotencoding", OneHotEncoder(sparse_output=False, handle_unknown="ignore"))
     ])
 
+
+    # Route Creation and Same region checking (using source and destination)
     logger.info("Building source-destination pipeline...")
     route_map = {
         ("delhi", "cochin"): "1",
@@ -67,60 +69,70 @@ def build_pipeline():
         ("banglore", "delhi"): "5",
         ("chennai", "kolkata"): "6"
     }
-
     sor_des_trans = Pipeline(steps=[
         ("create_route", RouteCreator(route_map=route_map)),
         ("onehotencoding", OneHotEncoder(sparse_output=False, handle_unknown="ignore"))
     ])
-
     source_destination_trans = FeatureUnion(transformer_list=[
         ("part1", sor_des_trans),
         ("part2", FunctionTransformer(func=is_same_region))
     ])
 
+
+    # Fetching part of day (Evening, Morning ,Night,Afternoon) (using dtoj_hour)
     logger.info("Building departure hour pipeline...")
     dep_time_hour_union = Pipeline(steps=[
         ("part1", FunctionTransformer(func=part_of_day)),
         ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False))
     ])
 
+
+    # Identifing month(using dtoj_month)
     logger.info("Building month pipeline...")
     month_pipeline = Pipeline(steps=[
         ("make_month_object", FunctionTransformer(func=make_month_object)),
         ("onehotencoding", OneHotEncoder(sparse_output=False, handle_unknown="ignore"))
     ])
 
+
+    # Identifing part of month(using dtoj_day)
     logger.info("Building dtoj_day pipeline...")
     dtoj_day_pipeline = Pipeline(steps=[
         ("bucket", FunctionTransformer(func=part_of_month)),
         ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False))
     ])
 
+
+    # Imputing weekend data(using is_weekend column)
     logger.info("Building weekend pipeline...")
     weekend_pipeline = Pipeline(steps=[
         ("imputer", SimpleImputer(strategy="most_frequent"))
     ])
 
+
+    # Identify duration as Short , Medium , Long 
     logger.info("Building duration pipelines...")
     duration_cat_pipeline = Pipeline([
         ("cat", FunctionTransformer(func=duration_category)),
         ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False))
     ])
-
     duration_num_pipeline = Pipeline([
         ("imputer", SimpleImputer(strategy="median"))
     ])
-
     duration_union = FeatureUnion([
         ("numeric", duration_num_pipeline),
         ("categorical", duration_cat_pipeline)
     ])
 
+
+    # Identifing direct flight
     logger.info("Building total_stops pipeline...")
     total_stops_pipeline = Pipeline(steps=[
         ("stops_num", SimpleImputer(strategy="most_frequent")),
         ("direct_flag", FunctionTransformer(func=direct_flight))
     ])
+
+
 
     logger.info("Building additional_info pipeline...")
     info_pipe1 = Pipeline(steps=[
@@ -128,14 +140,13 @@ def build_pipeline():
         ("group", RareLabelEncoder(tol=0.2, n_categories=2, replace_with="Other")),
         ("encoder", OneHotEncoder(handle_unknown="ignore", sparse_output=False))
     ])
-
     info_transformer = Pipeline(steps=[
         ("imputer", SimpleImputer(strategy="constant", fill_value="unknown")),
         ("union", info_pipe1)
     ])
 
-    logger.info("Packing into ColumnTransformer...")
 
+    logger.info("Packing into ColumnTransformer...")
     column_transformer = ColumnTransformer(
         transformers=[
             ("tf1", airline_transformer, ["airline"]),
@@ -166,7 +177,7 @@ def fit_and_save(train_df: pd.DataFrame, y: pd.Series, artifacts_dir: str = None
     logger.info(f"Artifacts dir resolved → {artifacts_dir}")
     os.makedirs(artifacts_dir, exist_ok=True)
 
-
+    # is_weekend feature creation 
     date = pd.to_datetime(train_df.rename(columns={
         "dtoj_year": "year",
         "dtoj_month": "month",

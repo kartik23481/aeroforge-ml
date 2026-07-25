@@ -15,7 +15,7 @@ Usage:
         --input data/raw/flight_price.csv \
         --out_dir data/processed/
 """
-
+ 
 import argparse
 import os
 import sys
