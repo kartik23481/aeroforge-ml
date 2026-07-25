@@ -192,7 +192,7 @@ def apply_plotly_theme(fig):
 
 @st.cache_data
 def load_training_data():
-    data_path = "data/processed/train_data.csv"
+    data_path = "app_data/train_data.csv"
     try:
         train_df = pd.read_csv(data_path)
         train_df['source'] = train_df['source'].str.lower()
