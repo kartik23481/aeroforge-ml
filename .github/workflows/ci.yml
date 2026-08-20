@@ -1,5 +1,6 @@
 name: CI-CD Pipeline
 
+# Trigger the workflow on push events to the main branch
 on:
   push:
     branches: ["main"]
@@ -18,10 +19,10 @@ jobs:
     steps:
       # Checkout
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3  # cloning the gihub repo in ci workspace
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          persist-credentials: true
+          persist-credentials: true  # allowing the commit back to repo (allowing write permissions)
 
       # Python setup
       - name: Set up Python
