@@ -11,3 +11,4 @@ def predict_price(user_input: dict) -> float:
     transformed = COLUMN_TRANSFORMER.transform(df)
     prediction = MODEL.predict(transformed)[0]
     return float(prediction)
+  
